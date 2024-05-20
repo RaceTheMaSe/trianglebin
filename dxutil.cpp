@@ -46,7 +46,7 @@ std::string MultiByteFromWide(const std::wstring& ws)
 std::string MultiByteFromHR(HRESULT hr)
 {
     _com_error err(hr);
-    return MultiByteFromWide(err.ErrorMessage());
+    return MultiByteFromWide(WideFromMultiByte(err.ErrorMessage()));
 }
 
 bool detail_CheckHR(HRESULT hr, const char* file, const char* function, int line)
@@ -71,7 +71,7 @@ bool detail_CheckHR(HRESULT hr, const char* file, const char* function, int line
         L"File: " + wfile + L"\n" +
         L"Function: " + wfunction + L"\n" +
         L"Line: " + std::to_wstring(line) + L"\n" +
-        L"ErrorMessage: " + err.ErrorMessage() + L"\n";
+        L"ErrorMessage: " + WideFromMultiByte(err.ErrorMessage()) + L"\n";
 
     int result = MessageBoxW(NULL, msg.c_str(), L"Error", MB_ABORTRETRYIGNORE);
     if (result == IDABORT)

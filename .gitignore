@@ -36,3 +36,8 @@ x64
 
 # imgui
 imgui.ini
+
+# build
+.cache/
+build*/
+install*/

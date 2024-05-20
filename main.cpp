@@ -56,7 +56,7 @@ void WindowInit(int width, int height, const char* title)
     wc.cbSize = sizeof(wc);
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleW(NULL);
-    wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wc.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     wc.lpszClassName = L"WindowClass";
     CHECKWIN32(RegisterClassExW(&wc));
 

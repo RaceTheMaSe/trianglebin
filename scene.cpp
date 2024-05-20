@@ -169,23 +169,36 @@ void SceneInit(ID3D11Device* dev, ID3D11DeviceContext* dc)
 		CHECKHR(dev->CreateBlendState(&blitBlendDesc, &g_BlitBlendState));
 	}
 
+	CD3D11_BUFFER_DESC pixelCountBufferDesc = CD3D11_BUFFER_DESC(sizeof(UINT32), D3D11_BIND_UNORDERED_ACCESS, D3D11_USAGE_DEFAULT, 0, D3D11_RESOURCE_MISC_BUFFER_STRUCTURED, sizeof(UINT32));
+	
+	D3D11_UNORDERED_ACCESS_VIEW_DESC pixelCountUAVDesc = {}; // the available MinGW d3d11.h does not have a constructor, so replicate it
+	pixelCountUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	pixelCountUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	pixelCountUAVDesc.Buffer.FirstElement = 0;
+	pixelCountUAVDesc.Buffer.NumElements = 1;
+	pixelCountUAVDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_COUNTER;
+
+	CD3D11_BUFFER_DESC MaxNumPixelsBufferDesc = CD3D11_BUFFER_DESC(16, D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE, 0, sizeof(UINT32));
+
+	CD3D11_SAMPLER_DESC TrianglesSMPDesc = CD3D11_SAMPLER_DESC(D3D11_DEFAULT);
+
 	CHECKHR(dev->CreateBuffer(
-		&CD3D11_BUFFER_DESC(sizeof(UINT32), D3D11_BIND_UNORDERED_ACCESS, D3D11_USAGE_DEFAULT, 0, D3D11_RESOURCE_MISC_BUFFER_STRUCTURED, sizeof(UINT32)),
+		&pixelCountBufferDesc,
 		NULL,
 		&g_PixelCountBuffer));
 
 	CHECKHR(dev->CreateUnorderedAccessView(
 		g_PixelCountBuffer,
-		&CD3D11_UNORDERED_ACCESS_VIEW_DESC(g_PixelCountBuffer, DXGI_FORMAT_UNKNOWN, 0, 1, D3D11_BUFFER_UAV_FLAG_COUNTER),
+		&pixelCountUAVDesc,
 		&g_PixelCountUAV));
 
 	CHECKHR(dev->CreateBuffer(
-		&CD3D11_BUFFER_DESC(16, D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE, 0, sizeof(UINT32)),
+		&MaxNumPixelsBufferDesc,
 		NULL,
 		&g_MaxNumPixelsBuffer));
 
 	CHECKHR(dev->CreateSamplerState(
-		&CD3D11_SAMPLER_DESC(D3D11_DEFAULT),
+		&TrianglesSMPDesc,
 		&g_TrianglesSMP));
 }
 
@@ -205,27 +218,31 @@ void SceneResize(int width, int height)
 	UINT sampleCount = kSampleCountCounts[g_SampleCountIndex];
 
 	if (g_TrianglesTex2DMS) g_TrianglesTex2DMS->Release();
+	CD3D11_TEXTURE2D_DESC TrianglesTex2DMSDesc = CD3D11_TEXTURE2D_DESC(trianglesFormat, width, height, 1, 1, D3D11_BIND_RENDER_TARGET, D3D11_USAGE_DEFAULT, 0, sampleCount, 0, 0);
 	CHECKHR(dev->CreateTexture2D(
-		&CD3D11_TEXTURE2D_DESC(trianglesFormat, width, height, 1, 1, D3D11_BIND_RENDER_TARGET, D3D11_USAGE_DEFAULT, 0, sampleCount, 0, 0),
+		&TrianglesTex2DMSDesc,
 		NULL,
 		&g_TrianglesTex2DMS));
 
 	if (g_TrianglesRTV) g_TrianglesRTV->Release();
+	CD3D11_RENDER_TARGET_VIEW_DESC TrianglesRtvDesc = CD3D11_RENDER_TARGET_VIEW_DESC(D3D11_RTV_DIMENSION_TEXTURE2DMS, trianglesFormat, 0, 1);
 	CHECKHR(dev->CreateRenderTargetView(
 		g_TrianglesTex2DMS,
-		&CD3D11_RENDER_TARGET_VIEW_DESC(D3D11_RTV_DIMENSION_TEXTURE2DMS, trianglesFormat, 0, 1),
+		&TrianglesRtvDesc,
 		&g_TrianglesRTV));
 
 	if (g_TrianglesTex2D) g_TrianglesTex2D->Release();
+	CD3D11_TEXTURE2D_DESC TrianglesTex2DDesc = CD3D11_TEXTURE2D_DESC(trianglesFormat, width, height, 1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_DEFAULT, 0, 1, 0, 0);
 	CHECKHR(dev->CreateTexture2D(
-		&CD3D11_TEXTURE2D_DESC(trianglesFormat, width, height, 1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_DEFAULT, 0, 1, 0, 0),
+		&TrianglesTex2DDesc,
 		NULL,
 		&g_TrianglesTex2D));
 
 	if (g_TrianglesSRV) g_TrianglesSRV->Release();
+	CD3D11_SHADER_RESOURCE_VIEW_DESC TrianglesSRVDesc = CD3D11_SHADER_RESOURCE_VIEW_DESC(D3D11_SRV_DIMENSION_TEXTURE2D, trianglesFormat, 0, 1);
 	CHECKHR(dev->CreateShaderResourceView(
 		g_TrianglesTex2D,
-		&CD3D11_SHADER_RESOURCE_VIEW_DESC(D3D11_SRV_DIMENSION_TEXTURE2D, trianglesFormat, 0, 1),
+		&TrianglesSRVDesc,
 		&g_TrianglesSRV));
 }
 
