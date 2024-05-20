@@ -92,7 +92,7 @@ void RendererInit()
     scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     scd.OutputWindow = g_hWnd;
     scd.Windowed = TRUE;
-    scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     scd.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 
     UINT flags = 0;
@@ -102,12 +102,9 @@ void RendererInit()
 
     ComPtr<ID3D11Device> pDevice;
     ComPtr<ID3D11DeviceContext> pDeviceContext;
-    ComPtr<IDXGISwapChain2> pSwapChain;
-    HANDLE hFrameLatencyWaitableObject;
+    ComPtr<IDXGISwapChain> pSwapChain;
 
     D3D_FEATURE_LEVEL kFeatureLevels[] = {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
         D3D_FEATURE_LEVEL_11_1,
         D3D_FEATURE_LEVEL_11_0,
         D3D_FEATURE_LEVEL_10_1,
@@ -137,7 +134,6 @@ void RendererInit()
             (featureLevel >> 12) & 0x0F, (featureLevel >> 8) & 0x0F);
     }
 
-    hFrameLatencyWaitableObject = pSwapChain->GetFrameLatencyWaitableObject();
     CHECKHR(pDXGIFactory->MakeWindowAssociation(g_hWnd, DXGI_MWA_NO_WINDOW_CHANGES));
 
     g_Device = pDevice.Get();
@@ -146,7 +142,6 @@ void RendererInit()
 	g_DeviceContext->AddRef();
 	g_SwapChain = pSwapChain.Get();
 	g_SwapChain->AddRef();
-	g_FrameLatencyWaitableObject = hFrameLatencyWaitableObject;
 }
 
 void RendererResize(int width, int height)
@@ -167,9 +162,6 @@ void RendererPaint()
 	ID3D11Device* dev = g_Device;
 	ID3D11DeviceContext* dc = g_DeviceContext;
 	IDXGISwapChain* sc = g_SwapChain;
-
-	// Wait until the previous frame is presented before drawing the next frame
-	CHECKWIN32(WaitForSingleObject(g_FrameLatencyWaitableObject, INFINITE) == WAIT_OBJECT_0);
 
 	// grab the current backbuffer
 	ComPtr<ID3D11Texture2D> pBackBufferTex2D;

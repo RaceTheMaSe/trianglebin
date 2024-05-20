@@ -8,7 +8,6 @@
 #undef GetWindowFont // because imgui
 #include <shellscalingapi.h>
 #include <d3d11.h>
-#include <dxgi1_4.h>
 #include <wrl/client.h>
 
 #include <string>
